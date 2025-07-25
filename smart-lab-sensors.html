@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>النظام الذكي لإدارة المختبر - المستشعرات والمحاكاة</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            direction: rtl;
+            background: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            text-align: center;
+            color: #004aad;
+            margin-bottom: 40px;
+        }
+        section {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h2 {
+            color: #007acc;
+            margin-bottom: 15px;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 12px;
+        }
+        li::before {
+            content: "•";
+            color: #007acc;
+            display: inline-block; 
+            width: 1em;
+            margin-left: -1em;
+            font-weight: bold;
+        }
+        .sensor-name {
+            font-weight: 700;
+            color: #004aad;
+        }
+        .emoji {
+            font-size: 1.3em;
+            margin-left: 6px;
+        }
+        /* لمحاكاة عرض القيم */
+        .sensor-values {
+            background: #e3f0ff;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 1.1em;
+            line-height: 1.8em;
+            color: #003366;
+        }
+        .alert {
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>النظام الذكي لإدارة المختبر</h1>
+
+    <section>
+        <h2>🧠 المستشعرات (Sensors) المستخدمة في الجهاز:</h2>
+
+        <h3>1. المستشعرات البيئية الأساسية:</h3>
+        <ul>
+            <li><span class="sensor-name">مستشعر درجة الحرارة (Temperature Sensor):</span> يراقب درجة حرارة البيئة بشكل لحظي لضمان بقائها ضمن النطاق المسموح به للمواد المخزنة.</li>
+            <li><span class="sensor-name">مستشعر الرطوبة (Humidity Sensor):</span> يقيس نسبة الرطوبة في الجو المحيط ويصدر تنبيهات في حال تجاوزت الحد الآمن للمواد الكيميائية.</li>
+            <li><span class="sensor-name">مستشعر الحركة/الاهتزاز (Motion/Vibration Sensor):</span> يكشف عن أي اهتزازات أو تحركات غير طبيعية قد تؤثر على سلامة المادة المخزنة.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h3>2. المستشعرات الكيميائية المتخصصة:</h3>
+        <ul>
+            <li><span class="sensor-name">مستشعر اللون (Color Sensor):</span> يُحدد لون المادة بدقة للمساعدة في تقييم نقاوتها أو رصد تغيرات بصرية في حال حدوث تفاعلات كيميائية.</li>
+            <li><span class="sensor-name">مستشعر التحليل الطيفي (Spectral Sensor):</span> يُحلل المكونات الكيميائية للمواد باستخدام تقنيات تحليل الضوء، للكشف عن شوائب أو تغيرات تركيبية.</li>
+            <li><span class="sensor-name">مستشعر الغاز (Gas Sensor):</span> يكشف عن وجود أي غازات متطايرة أو ناتجة من تفاعل داخل المادة، خصوصًا المؤكسدة أو السامة منها.</li>
+            <li><span class="sensor-name">مستشعر المؤشرات التفاعلية (Reaction Indicator Sensor):</span> يُحلل المؤشرات البصرية أو التفاعلية التي تنتج أثناء التحليل أو التخزين (مثل تغير اللون أو ظهور فقاعات).</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>📡 محاكاة قراءات المستشعرات في الوقت الحقيقي</h2>
+        <div class="sensor-values" id="sensorData">
+            جارِ تحميل البيانات...
+        </div>
+    </section>
+
+<script>
+    // نطاقات القيم المقبولة لكل مستشعر (للتنبيه)
+    const thresholds = {
+        temperature: { min: 15, max: 30 }, // درجة الحرارة المسموح بها
+        humidity: { min: 30, max: 60 },   // الرطوبة النسبية %
+        motion: { min: 0, max: 0 },       // حركة/اهتزاز (0 = لا حركة)
+        color: ['أزرق', 'أخضر', 'أصفر', 'أحمر', 'شفاف'], // ألوان عادية
+        gas: { safe: true },               // غاز (true = آمن, false = خطير)
+        reaction: { normal: true }         // مؤشرات تفاعلية (true=طبيعي)
+    };
+
+    // دالة توليد رقم عشوائي بين min و max
+    function randomBetween(min, max) {
+        return Math.random() * (max - min) + min;
+    }
+
+    // دالة اختيار لون عشوائي من القائمة
+    function randomColor() {
+        const colors = thresholds.color;
+        return colors[Math.floor(Math.random() * colors.length)];
+    }
+
+    // دالة عشوائية للحالة الغازية والمؤشرات التفاعلية
+    function randomBoolean(probTrue=0.9) { // 90% حالة طبيعية
+        return Math.random() < probTrue;
+    }
+
+    // تحديث البيانات وعرضها
+    function updateSensorData() {
+        const temperature = +(randomBetween(10, 35)).toFixed(1); // درجة الحرارة
+        const humidity = +(randomBetween(20, 70)).toFixed(1);    // الرطوبة
+        const motion = Math.random() < 0.8 ? 0 : 1;              // 20% احتمال حركة
+        const color = randomColor();
+        const gasSafe = randomBoolean(0.85);                     // 85% آمن
+        const reactionNormal = randomBoolean(0.9);               // 90% طبيعي
+
+        // بناء النص مع تنبيهات
+        let html = `
+            <p><strong>درجة الحرارة:</strong> ${temperature} °م ${ (temperature < thresholds.temperature.min || temperature > thresholds.temperature.max) ? '<span class="alert">⚠️ خارج النطاق الآمن!</span>' : ''}</p>
+            <p><strong>الرطوبة:</strong> ${humidity} % ${ (humidity < thresholds.humidity.min || humidity > thresholds.humidity.max) ? '<span class="alert">⚠️ خارج النطاق الآمن!</span>' : ''}</p>
+            <p><strong>الحركة/الاهتزاز:</strong> ${motion === 0 ? 'لا توجد حركة' : '<span class="alert">🔴 حركة غير طبيعية!</span>'}</p>
+            <p><strong>اللون:</strong> ${color}</p>
+            <p><strong>مستشعر الغاز:</strong> ${gasSafe ? 'آمن ✅' : '<span class="alert">خطر! غازات ضارة!</span>'}</p>
+            <p><strong>مؤشرات تفاعلية:</strong> ${reactionNormal ? 'طبيعي ✅' : '<span class="alert">تغيرات غير طبيعية!</span>'}</p>
+        `;
+
+        document.getElementById('sensorData').innerHTML = html;
+    }
+
+    // تحديث كل 3 ثواني
+    updateSensorData();
+    setInterval(updateSensorData, 3000);
+</script>
+
+</body>
+</html>
